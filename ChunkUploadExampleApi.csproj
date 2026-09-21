@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="ChunkUploadExample.AppHost\ChunkUploadExample.AppHost.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.25.1" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.412.3" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.31" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ChunkUploadExample.AppHost\**\*.cs" />
+    <EmbeddedResource Remove="ChunkUploadExample.AppHost\**\*" />
+    <None Remove="ChunkUploadExample.AppHost\**\*" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../ChunkUploadExampleApi.AppHost/ChunkUploadExampleApi.AppHost.AppHost/ChunkUploadExampleApi.AppHost.AppHost.csproj" Id="fb0ae616-3c7e-4908-9387-a70d4b9bffd7" />
+  <Project Path="../ChunkUploadExampleApi.AppHost/ChunkUploadExampleApi.AppHost.ServiceDefaults/ChunkUploadExampleApi.AppHost.ServiceDefaults.csproj" />
+  <Project Path="ChunkUploadExampleApi.csproj" />
+</Solution>
