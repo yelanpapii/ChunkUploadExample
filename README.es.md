@@ -26,6 +26,11 @@ El proyecto demuestra cómo implementar una subida reanudable: el cliente divide
 - OpenAPI disponible en entorno de desarrollo.
 - Nullable Reference Types habilitado.
 - Inyección de dependencias integrada de ASP.NET Core.
+- AppHost de .NET Aspire para orquestar las dependencias locales.
+- Redis para metadatos, idempotencia y locks distribuidos.
+- Azurite para probar Azure Blob Storage sin una cuenta de Azure.
+- MinIO para probar almacenamiento compatible con Amazon S3 en local.
+- Selección independiente del proveedor de metadatos y del almacenamiento de blobs.
 
 ## Requisitos
 
@@ -66,6 +71,46 @@ https://localhost:7063/openapi/v1.json
 ```
 
 La URL exacta puede variar según la configuración del host.
+
+## Ejecución con .NET Aspire
+
+El proyecto incluye `ChunkUploadExample.AppHost`, que permite levantar la API y sus dependencias locales desde un único punto de entrada:
+
+```bash
+dotnet run --project ChunkUploadExample.AppHost/ChunkUploadExample.AppHost.csproj
+```
+
+El AppHost puede orquestar los siguientes recursos:
+
+| Recurso | Uso |
+|---|---|
+| API | Aplicación `ChunkUploadExampleApi` |
+| Redis | Metadatos, idempotencia y locks distribuidos |
+| Azurite | Emulador local de Azure Blob Storage |
+| MinIO | Servicio local compatible con Amazon S3 |
+
+Aspire proporciona un dashboard para consultar el estado de los recursos, sus endpoints, logs y configuración durante el desarrollo. Las referencias de Aspire inyectan las conexiones de Redis y Azure Blob mediante `ConnectionStrings`, evitando depender de valores fijos como `localhost` dentro de contenedores.
+
+La configuración predeterminada del AppHost usa Redis y Azurite:
+
+```text
+MetadataProvider = Redis
+BlobProvider = AzureBlob
+```
+
+La API también permite ejecutar localmente sin Aspire usando `InMemory` y `Local`, tal como se define en `appsettings.json`.
+
+### Combinaciones disponibles
+
+```text
+InMemory + Local       Desarrollo rápido sin contenedores
+Redis + AzureBlob      Redis + Azurite para integración Azure
+Redis + S3             Redis + MinIO para integración S3
+```
+
+Para usar MinIO, cambia en `ChunkUploadExample.AppHost/Program.cs` el valor de `Storage__BlobProvider` a `S3` y configura `Storage__S3Bucket`, `Storage__S3AccessKey` y `Storage__S3SecretKey`. El bucket `uploads` debe existir en MinIO antes de realizar la primera carga.
+
+El AppHost es un proyecto ejecutable independiente y está incluido en `ChunkUploadExample.slnx`. Se requiere .NET 10 y una instalación compatible de Docker para ejecutar Redis, Azurite y MinIO.
 
 ## Flujo de una subida
 
@@ -424,12 +469,21 @@ En la implementación actual:
 
 ```text
 ChunkUploadExample/
-├── ChunkUploadExample.csproj
-├── ChunkUploadExample.cs
+├── ChunkUploadExampleApi.csproj
+├── ChunkUploadExample.AppHost/
+│   ├── ChunkUploadExample.AppHost.csproj
+│   └── Program.cs
 ├── Program.cs
-├── UploadStoreInMemory.cs
 ├── Interfaces/
+│   ├── IChunkStorage.cs
 │   └── IUploadStore.cs
+├── Metadata/
+│   ├── InMemoryUploadMetadata.cs
+│   └── RedisUploadMetadata.cs
+├── Storage/
+│   ├── AzureBlobChunkStorageStrategy.cs
+│   ├── LocalUploadPaths.cs
+│   └── S3ChunkStorageStrategy.cs
 ├── Properties/
 │   └── launchSettings.json
 ├── appsettings.json
@@ -516,7 +570,6 @@ Cambios recomendados:
 - Configurar límites de request y timeouts adecuados.
 - Añadir pruebas unitarias, pruebas de integración y pruebas de concurrencia.
 
-## Licencia
 ## Redis y proveedores de almacenamiento de objetos
 
 La aplicación separa los metadatos del upload de los bytes de los chunks. Redis almacena los metadatos, las claves de idempotencia y los locks distribuidos. Los chunks y el objeto final pueden almacenarse localmente, en Azure Blob Storage o en Amazon S3.
